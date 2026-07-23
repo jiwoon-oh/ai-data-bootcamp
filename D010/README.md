@@ -46,10 +46,10 @@
 
 ## 5️⃣인터랙티브 차트 보기
 
-- [OPS vs 평균관중](https://jiwoon-oh.github.io/ai-data-bootcamp/ops_chart.html)
-- [ERA vs 평균관중](https://jiwoon-oh.github.io/ai-data-bootcamp/era_chart.html)
-- [승률 vs 평균관중](https://jiwoon-oh.github.io/ai-data-bootcamp/wpct_chart.html)
-- [OPS × ERA 산점도](https://jiwoon-oh.github.io/ai-data-bootcamp/scatter_chart.html)
+- [OPS vs 평균관중](https://jiwoon-oh.github.io/ai-data-bootcamp/D010/docs/ops_chart.html)
+- [ERA vs 평균관중](https://jiwoon-oh.github.io/ai-data-bootcamp/D010/docs/era_chart.html)
+- [승률 vs 평균관중](https://jiwoon-oh.github.io/ai-data-bootcamp/D010/docs/wpct_chart.html)
+- [OPS × ERA 산점도](https://jiwoon-oh.github.io/ai-data-bootcamp/D010/docs/scatter_chart.html)
 
 ## 6️⃣상관관계 확인 및 시각화 인사이트
 
