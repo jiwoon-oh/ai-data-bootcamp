@@ -14,7 +14,12 @@ ENCODING = "cp949"
 # 실제 파일명 패턴: "서울시 상권분석서비스(점포-상권)_2023년.csv"
 # 공백/밑줄 표기가 파일마다 섞여 있어 정규화 후 비교한다.
 def _normalize(name: str) -> str:
-    return name.replace(" ", "").replace("_", "")
+    # 괄호·하이픈까지 지운다. 내려받는 경로에 따라 "(점포-상권)" 이 "점포상권" 으로
+    # 저장되는 경우가 있어서 양쪽을 같은 규칙으로 눌러 놓고 비교한다.
+    # 지워도 상권/자치구 구분은 유지된다 ("점포상권" vs "점포자치구").
+    for ch in " _()-":
+        name = name.replace(ch, "")
+    return name
 
 # 괄호 안 테이블명으로 정확히 구분 (자치구 버전과 절대 안 겹침)
 TABLE_MARKER = {
@@ -23,6 +28,7 @@ TABLE_MARKER = {
     "area":     "(영역-상권)",
     "flow":     "(길단위인구-상권)",
     "facility": "(집객시설-상권)",
+    "change":   "(상권변화지표-상권)",   # 기준선 전용 — 피처로는 절대 쓰지 않는다
 }
 
 # key → (테이블, 연도표기 또는 None=연도표기 없는 최신 파일)
@@ -37,6 +43,7 @@ FILE_SPEC = {
     "area":        ("area", None),
     "flow":        ("flow", None),
     "facility":    ("facility", None),
+    "change":      ("change", None),
 }
 
 _YEAR_TOKENS = ["2023년", "2024년", "2025년", "2026년"]
