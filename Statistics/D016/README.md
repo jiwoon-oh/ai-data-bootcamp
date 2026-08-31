@@ -627,8 +627,6 @@ Future versions of this analysis could include:
 
 # 👤 My Contribution
 
-I was responsible for:
-
 * Defining the business question
 * Validating the experimental dataset
 * Checking assignment consistency and SRM
