@@ -1,5 +1,13 @@
 # 🍔 Fast-Food Promotion Experiment Analysis
 
+### 🔗 Project
+
+[View Interactive Project →](https://jiwoon-oh.github.io/portfolio/projects/ab-test-fastfood/)
+
+### 📂 Repository
+
+This repository contains the data preprocessing, exploratory analysis and statistical analysis workflow used in the project.
+
 ## 📌 Overview
 
 A fast-food chain planned to introduce a new menu item and tested three different promotional strategies across multiple stores.
