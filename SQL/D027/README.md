@@ -255,15 +255,17 @@ LIMIT 100;
     - 실제 리뷰 내용의 신뢰도 검증 → `adjusted_keyword_ratio`
     - 이 둘을 점수화해서 합 → `warning_score`
 
-    1. Wilson Lower Bound: 평점이 운이 좋았던건 아닐까
-      - 같은 성공률 95% 라해도 5번 던진것과 1000번 던진것은 신뢰도가 다르다. 이걸 상품평점에 적용해보면 rating=5.0, rating_count=5 → 리뷰 5개가 전부 만점, 하지만 
+    1. **Wilson Lower Bound: 평점이 운이 좋았던건 아닐까**
+
+      같은 성공률 95% 라해도 5번 던진것과 1000번 던진것은 신뢰도가 다르다. 이걸 상품평점에 적용해보면 rating=5.0, rating_count=5 → 리뷰 5개가 전부 만점, 하지만 
       리뷰가 너무 적어서 진짜 좋은건지 아니면 우연히 좋은 사람들만 리뷰를 남긴건지, 알바를 쓴건지 알 수 없음.
       rating=4.1, rating_count=827, 827명이 평가하면 신뢰도가 올라감.
       `wilson_lower_bound_score`는 전자의 경우, 점수를 많이 깎고(표본이 적어서) 후자의 경우 점수를 조금만 깎아 **리뷰가 적을수록 진짜 평점은 이것보다 낮을 수 있다**라고 신뢰구간을 제시함.
       `rating_gap` = 명시된 평점 - `wilson_lower_bound_score`을 사용하여 `rating_gap`이 클수록 평점과 보수적인 추정치 사이의 간극이 크다 라고 볼 수 있음.
 
-    2. `adjusted_keyword_ratio`: 리뷰내용에 진짜 부정적인 키워드들이 있는지
-      - `negative_keyword_count`는 `review_content`, `review_title`에서의 부정적인 단어를 카운트함.
+    2. **`adjusted_keyword_ratio`: 리뷰내용에 진짜 부정적인 키워드들이 있는지**
+
+      `negative_keyword_count`는 `review_content`, `review_title`에서의 부정적인 단어를 카운트함.
       `negative_keyword_count` / `rating_count`로 **리뷰 대비 불만 비율**을 계산하고 전체 상품 평균 비율(`global_avg_ratio`)을 가상으로 섞어서 완충시킨다.
       정리하면 리뷰가 많을수록 실제 비율에 가까워지고 리뷰가 적을수록 전체 평균쪽으로 끌려가게 된다. (베이지안 스무딩)
 
