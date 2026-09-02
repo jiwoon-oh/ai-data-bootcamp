@@ -249,17 +249,27 @@ LIMIT 100;
 
 ### 5️⃣ "이 상품, 정말 좋은 걸까?" 
 
-1. 테마: 표시된 평점(`rating`)이 높다고 무조건 믿지 않고, 
-    그 평점을 뒷받침할 근거(리뷰 수, 실제 리뷰 내용)가 충분한지 교차 검증해서 **의심스러운 상품에 경고를 매기는 시스템**
+1. 테마: 평점 4.0 이상인 상품들 중에서, 그 평점을 믿을 수 있는지 두 가지 방법으로 검증한다
 2. 로직 스케치
-    - 상품 단위로 데이터 정리 (`product_id` 기준 GROUP BY, 리뷰 텍스트는 `STRING_AGG`로 합침)
-    - **신호 1 — 리뷰 수 부족**: 평점 4.0 이상인데, `rating_count`가 전체 상품 중 하위 25%(1사분위) 이하인 상품 → "적은 리뷰로 만들어진 고평점" 의심
-    - **신호 2 — 부정 키워드 언급**: `review_content` + `review_title`에서 불만/결함/신뢰 관련 키워드(defective, broke, refund, fake 등 약 25개)가 몇 번 등장하는지 정규식으로 카운트
-    - 두 신호를 점수화해서 합산
-        - 리뷰 수 부족 신호: 0 또는 1점
-        - 부정 키워드 신호: 언급 빈도에 따라 0~3점 (1~2개: 1점, 3~5개: 2점, 6개 이상: 3점)
-        - 합산 `warning_score` (0~4점)
-    -`warning_score >= 2`인 상품만 추출해서, 점수 구간별로 🟢안전 / 🟡주의 / 🔴위험 등급 표시
+    - 평점 자체의 신뢰도 검증 → `wilson_lower_bound_score`
+    - 실제 리뷰 내용의 신뢰도 검증 → `adjusted_keyword_ratio`
+    - 이 둘을 점수화해서 합 → `warning_score`
+
+    1. Wilson Lower Bound: 평점이 운이 좋았던건 아닐까
+      - 같은 성공률 95% 라해도 5번 던진것과 1000번 던진것은 신뢰도가 다르다. 이걸 상품평점에 적용해보면 rating=5.0, rating_count=5 → 리뷰 5개가 전부 만점, 하지만 
+      리뷰가 너무 적어서 진짜 좋은건지 아니면 우연히 좋은 사람들만 리뷰를 남긴건지, 알바를 쓴건지 알 수 없음.
+      rating=4.1, rating_count=827 (Glen) → 827명이 평가하면 신뢰도가 올라감.
+      `wilson_lower_bound_score`는 전자의 경우, 점수를 많이 깎고(표본이 적어서) 후자의 경우 점수를 조금만 깎아 **리뷰가 적을수록 진짜 평점은 이것보다 낮을 수 있다**라고 신뢰구간을 제시함.
+      `rating_gap` = 명시된 평점 - `wilson_lower_bound_score`을 사용하여 `rating_gap`이 클수록 평점과 보수적인 추정치 사이의 간극이 크다 라고 볼 수 있음.
+
+    2. `adjusted_keyword_ratio`: 리뷰내용에 진짜 부정적인 키워드들이 있는지
+      - `negative_keyword_count`는 `review_content`, `review_title`에서의 부정적인 단어를 카운트함.
+      `negative_keyword_count` / `rating_count`로 **리뷰 대비 불만 비율**을 계산하고 전체 상품 평균 비율(`global_avg_ratio`)을 가상으로 섞어서 완충시킨다.
+      정리하면 리뷰가 많을수록 실제 비율에 가까워지고 리뷰가 적을수록 전체 평균쪽으로 끌려가게 된다. (베이지안 스무딩)
+
+    3. `rating_gap`이 크면 `uncertainty_severity` (0~3점), `adjusted_keyword_ratio`이 높으면 `keyword_severity` (0~3점)
+    이 둘을 합산하여 `warning_score` 계산한다.
+
 3. 코드
 
 ```sql
@@ -271,46 +281,102 @@ WITH product_agg AS (
     MAX(rating_count) AS rating_count,
     STRING_AGG(DISTINCT review_content, ' ') AS review_content_all,
     STRING_AGG(DISTINCT review_title, ' ') AS review_title_all
-  FROM `my-project.ai_bootcamp_sql.amazon_sales_clean`
+  FROM `project-0715781d-692c-4d2f-8a5.ai_bootcamp_sql.amazon_sales_clean`
   GROUP BY product_id
 ),
-threshold AS (
-  SELECT APPROX_QUANTILES(rating_count, 4)[OFFSET(1)] AS q1_rating_count
+
+-- 1) Wilson score 하한: 평점의 통계적 불확실성 보정
+wilson AS (
+  SELECT
+    *,
+    SAFE_DIVIDE(rating - 1, 4) AS p_hat,
+    1.96 AS z
   FROM product_agg
 ),
-flags AS (
+wilson_score AS (
   SELECT
-    p.product_id,
-    p.product_name,
-    p.rating,
-    p.rating_count,
-    (p.rating >= 4.0 AND p.rating_count <= t.q1_rating_count) AS flag_low_review_count,
+    *,
+    SAFE_DIVIDE(
+      p_hat + POW(z, 2) / (2 * rating_count)
+        - z * SQRT(
+            SAFE_DIVIDE(p_hat * (1 - p_hat), rating_count)
+            + POW(z, 2) / (4 * POW(rating_count, 2))
+          ),
+      1 + POW(z, 2) / rating_count
+    ) AS wilson_lower_bound_raw
+  FROM wilson
+),
+wilson_final AS (
+  SELECT
+    *,
+    ROUND(1 + wilson_lower_bound_raw * 4, 3) AS wilson_lower_bound_score,
+    ROUND(rating - (1 + wilson_lower_bound_raw * 4), 3) AS rating_gap
+  FROM wilson_score
+),
+
+-- 2) 부정 키워드 개수 + 베이지안 스무딩 비율: 리뷰 텍스트의 통계적 불확실성 보정
+keyword_raw AS (
+  SELECT
+    product_id,
+    rating_count,
     ARRAY_LENGTH(
       REGEXP_EXTRACT_ALL(
-        LOWER(CONCAT(IFNULL(p.review_content_all, ''), ' ', IFNULL(p.review_title_all, ''))),
+        LOWER(CONCAT(IFNULL(review_content_all, ''), ' ', IFNULL(review_title_all, ''))),
         r'\b(bad|worst|waste|defective|broke|broken|poor|disappointed|return|refund|fake|damaged|useless|cheap quality|stopped working|not working|faulty|leak|leaking|noisy|slow|late delivery|wrong item|misleading|scam|regret|junk|flimsy|died|dead|malfunction)\b'
       )
     ) AS negative_keyword_count
-  FROM product_agg p
-  CROSS JOIN threshold t
+  FROM product_agg
 ),
+global_stats AS (
+  SELECT SAFE_DIVIDE(SUM(negative_keyword_count), SUM(rating_count)) AS global_avg_ratio
+  FROM keyword_raw
+),
+keyword_final AS (
+  SELECT
+    k.*,
+    g.global_avg_ratio,
+    -- C=50: 리뷰 50건 규모의 "가상 사전 정보"로 소표본 비율을 완충
+    ROUND(
+      SAFE_DIVIDE(
+        k.negative_keyword_count + 50 * g.global_avg_ratio,
+        k.rating_count + 50
+      ), 4
+    ) AS adjusted_keyword_ratio
+  FROM keyword_raw k
+  CROSS JOIN global_stats g
+),
+
+-- 3) 두 지표 결합 및 점수화
 scored AS (
   SELECT
-    *,
-    -- 부정 키워드 개수를 3단계로 나눠서 점수화 (0~3점)
+    w.product_id,
+    w.product_name,
+    w.rating,
+    w.rating_count,
+    w.wilson_lower_bound_score,
+    w.rating_gap,
+    kf.negative_keyword_count,
+    kf.adjusted_keyword_ratio,
     CASE
-      WHEN negative_keyword_count >= 6 THEN 3
-      WHEN negative_keyword_count >= 3 THEN 2
-      WHEN negative_keyword_count >= 1 THEN 1
+      WHEN w.rating_gap >= 1.5 THEN 3
+      WHEN w.rating_gap >= 0.8 THEN 2
+      WHEN w.rating_gap >= 0.3 THEN 1
       ELSE 0
-    END AS keyword_severity,
-    CAST(flag_low_review_count AS INT64) AS review_count_severity
-  FROM flags
+    END AS uncertainty_severity,
+    CASE
+      WHEN kf.adjusted_keyword_ratio >= 0.05 THEN 3
+      WHEN kf.adjusted_keyword_ratio >= 0.02 THEN 2
+      WHEN kf.adjusted_keyword_ratio > 0.005 THEN 1
+      ELSE 0
+    END AS keyword_severity
+  FROM wilson_final w
+  JOIN keyword_final kf USING (product_id)
+  WHERE w.rating >= 4.0   
 ),
 final AS (
   SELECT
     *,
-    keyword_severity + review_count_severity AS warning_score
+    uncertainty_severity + keyword_severity AS warning_score
   FROM scored
 )
 SELECT
@@ -318,28 +384,52 @@ SELECT
   product_name,
   rating,
   rating_count,
+  wilson_lower_bound_score,
+  rating_gap,
   negative_keyword_count,
-  flag_low_review_count,
+  adjusted_keyword_ratio,
+  uncertainty_severity,
   keyword_severity,
   warning_score,
   CASE
-    WHEN warning_score >= 4 THEN '🔴 위험'
-    WHEN warning_score >= 2 THEN '🟡 주의'
-    ELSE '🟢 안전'
+    WHEN warning_score >= 4 THEN '🔴위험'
+    WHEN warning_score >= 2 THEN '🟡주의'
+    ELSE '안전'
   END AS risk_level
 FROM final
 WHERE warning_score >= 2
-ORDER BY warning_score DESC, negative_keyword_count DESC
+ORDER BY warning_score DESC, rating_gap DESC, adjusted_keyword_ratio DESC
 LIMIT 100;
 ```
 
-4. 출력 화면 및 설명
+4. CTE 설명
 
-![추천 시스템 5](image-4.png)
+- Wilson: 5점 만점을 확률로 계산(p_hat = (rating - 1) / 4) 통계에서 사용하는 95% 신뢰구간이라고 이해
+- wilson_score: `wilson_lower_bound` = [ p̂ + z²/2n − z·√(p̂(1−p̂)/n + z²/4n²) ] / (1 + z²/n) 
+  **평점(p_hat)에서 리뷰(n)가 적을수록 더 많이 깎는 계산**
+  n이 크면 항들이 0에 가까워져 표시 평점과 큰 차이가 없다, n이 작으면 항들이 커져 많이 깎인 점수가 나옴.
+- wilson_final: `wilson_lower_bound_score` = 1 + `wilson_lower_bound` × 4, 다시 1~5점으로 돌리고 `rating_gap`을 계산함
+  `rating_gap` = `rating` − `wilson_lower_bound_score`, 클수록 표시 평점을 믿을 수 없다.
+- global_stats: 전체 평균 비율 계산(평균적으로 리뷰 100개당 부정 키워드가 몇 개 나오는지) 
+  `global_avg_ratio` = (전체 상품의 부정 키워드 합) / (전체 상품의 리뷰 수 합)
+- keyword_final: `adjusted_ratio` = (negative_count + 50 × global_avg_ratio) / (rating_count + 50)
+  분자와 분모에 가상의 50개짜리 리뷰를 추가해준다. 리뷰가 적으면 실제 데이터보다 가상 데이터가 많아서 전체 평균쪽으로 끌려가고 리뷰가 많으면 무시가 가능해서 원래 비율 그대로 유지.
+- scored: 임계값 설정
+  `rating_gap` ≥ 1.5  → 3점
+  `rating_gap` ≥ 0.8  → 2점
+  `rating_gap` ≥ 0.3  → 1점 AS `uncertainty_severity`
+  `adjusted_ratio` ≥ 0.05 → 3점
+  `adjusted_ratio` ≥ 0.02 → 2점
+  `adjusted_ratio` > 0.005 → 1점 AS `keyword_severity`
+- final: 점수 합산
+  `warning_score` = `uncertainty_severity` + `keyword_severity`
+- warning_score, rating_gap, adjusted_keyword_ratio 내림차순으로 정렬
 
-- `product_agg`: 앞서 확인한 `product_id` 중복 이슈를 방어하면서, 리뷰 텍스트를 상품 단위로 합치는 준비 단계
-- `threshold`: "리뷰 수가 적다"를 판단할 기준선(하위 25%)을 데이터 자체에서 계산 — 고정값이 아니라 분포 기반이라 데이터가 바뀌어도 자동으로 맞춰짐
-- `flags`: 두 가지 위험 신호(리뷰 수 부족 / 부정 키워드)를 각각 계산
-- `scored`: 부정 키워드는 "있다/없다"가 아니라 **빈도**를 반영해 심각도를 3단계로 세분화
-- `final`: 두 신호를 합산해 최종 `warning_score` 산출, 등급 라벨 부여
-- ❗한계: 부정 키워드 탐지는 단순 문자열이라 문맥을 파악하지는 못함, 리뷰가 많은 케이스는 당연히 부정적인 문자도 들어갈 확률이 높아 공정성 부분에 한계가 있음
+5. 출력 화면
+
+![alt text](image-7.png)
+
+![alt text](image-6.png)
+
+- 파란선(`rating`, 표시 평점)과 초록선(`wilson_lower_bound_score`, 보수적 추정 평점), 두 선의 간극이 `rating_gap`
+  왼쪽 부분은 rating gap이 크고 변동성이 심한 반면에 오른쪽 부분은 차이가 줄어들고 표시 평점과 비슷한 모양을 하고 있는것을 볼 수 있다.

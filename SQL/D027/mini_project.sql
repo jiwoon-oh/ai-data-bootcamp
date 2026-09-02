@@ -301,5 +301,5 @@ SELECT
   END AS risk_level
 FROM final
 WHERE warning_score >= 2
-ORDER BY warning_score DESC, negative_keyword_count DESC
+ORDER BY warning_score DESC, negative_keyword_count DESC, adjusted_keyword_ratio DESC
 LIMIT 100;
