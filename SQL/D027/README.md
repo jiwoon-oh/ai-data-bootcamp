@@ -258,7 +258,7 @@ LIMIT 100;
     1. Wilson Lower Bound: 평점이 운이 좋았던건 아닐까
       - 같은 성공률 95% 라해도 5번 던진것과 1000번 던진것은 신뢰도가 다르다. 이걸 상품평점에 적용해보면 rating=5.0, rating_count=5 → 리뷰 5개가 전부 만점, 하지만 
       리뷰가 너무 적어서 진짜 좋은건지 아니면 우연히 좋은 사람들만 리뷰를 남긴건지, 알바를 쓴건지 알 수 없음.
-      rating=4.1, rating_count=827 (Glen) → 827명이 평가하면 신뢰도가 올라감.
+      rating=4.1, rating_count=827, 827명이 평가하면 신뢰도가 올라감.
       `wilson_lower_bound_score`는 전자의 경우, 점수를 많이 깎고(표본이 적어서) 후자의 경우 점수를 조금만 깎아 **리뷰가 적을수록 진짜 평점은 이것보다 낮을 수 있다**라고 신뢰구간을 제시함.
       `rating_gap` = 명시된 평점 - `wilson_lower_bound_score`을 사용하여 `rating_gap`이 클수록 평점과 보수적인 추정치 사이의 간극이 크다 라고 볼 수 있음.
 
@@ -268,7 +268,7 @@ LIMIT 100;
       정리하면 리뷰가 많을수록 실제 비율에 가까워지고 리뷰가 적을수록 전체 평균쪽으로 끌려가게 된다. (베이지안 스무딩)
 
     3. `rating_gap`이 크면 `uncertainty_severity` (0~3점), `adjusted_keyword_ratio`이 높으면 `keyword_severity` (0~3점)
-    이 둘을 합산하여 `warning_score` 계산한다.
+    이 둘을 합산하여 `warning_score`를 계산한다.
 
 3. 코드
 
