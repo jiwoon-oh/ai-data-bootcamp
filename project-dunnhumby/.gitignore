@@ -1,0 +1,26 @@
+# 데이터 (용량 문제 + 공개 배포 데이터셋 재배포 방지)
+data/
+*.csv
+*.parquet
+
+# Jupyter
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
+
+# 결과물 (용량 큰 이미지/모델 등, 필요시 주석 해제)
+# outputs/
+# *.pkl

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -i 's/📊/[DATA]/g; s/🧪/[EXP]/g; s/✅/[OK]/g; s/❌/[FAIL]/g; s/📈/[STAT]/g; s/🎯/[DECISION]/g; s/⚠️/[WARN]/g; s/🚀/[DEPLOY]/g; s/🛑/[STOP]/g; s/🔄/[RETRY]/g' /c/Users/spide/AppData/Local/Temp/claude/c--Users-spide-ai-data-bootcamp/bac47a97-5d8b-4d02-8f67-ebfa984b6b46/scratchpad/build_dashboard.py)",
+      "Bash(PYTHONIOENCODING=utf-8 /c/Users/spide/anaconda3/envs/myenv/python.exe /c/Users/spide/AppData/Local/Temp/claude/c--Users-spide-ai-data-bootcamp/bac47a97-5d8b-4d02-8f67-ebfa984b6b46/scratchpad/build_dashboard.py)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\spide\\AppData\\Local\\Temp\\claude\\c--Users-spide-ai-data-bootcamp\\bac47a97-5d8b-4d02-8f67-ebfa984b6b46\\scratchpad"
+    ]
+  }
+}

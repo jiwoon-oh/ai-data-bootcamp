@@ -1,0 +1,13 @@
+# 가상환경
+venv/
+
+# 파이썬 캐시
+__pycache__/
+*.pyc
+
+# 대용량 데이터 파일 (Git에 안 올리는 게 좋음)
+*.parquet
+*.csv
+
+# Jupyter 체크포인트
+.ipynb_checkpoints/
