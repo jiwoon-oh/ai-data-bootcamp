@@ -67,7 +67,7 @@
 
 ## 4단계 — Type × 계층 셀 크기 확인
 
-![alt text](src/01_reach_rate_by_tier_1.png)
+![alt text](/project-dunnhumby/src/01_reach_rate_by_tier_1.png)
 
 | 계층 | TypeA | TypeB | TypeC |
 |---|---|---|---|
@@ -125,7 +125,7 @@
 | F-test for Poolability | 38.138 (p<0.0001) | 가구·주차 고정효과가 반드시 필요했음이 확인됨 |
 | F-stat (비클러스터) vs (클러스터) | 11.544(p=0.0000) vs **2.313(p=0.0135)** | 클러스터링 없이는 과대 유의성 — 클러스터 SE 필수였음이 실증됨 |
 
-![alt text](src/02_forest_plot_stage6.png)
+![alt text](/project-dunnhumby/src/02_forest_plot_stage6.png)
 
 **유의한 조합 (raw p<0.05, 9개 중 2개)**
 
@@ -142,7 +142,7 @@
 
 9개를 동시에 검정했으므로 FDR 보정 필요.
 
-![alt text](src/03_bh_correction.png)
+![alt text](/project-dunnhumby/src/03_bh_correction.png)
 
 | 순위 | 조합 | raw p | BH 기준선 | p_adj | 통과 |
 |---|---|---|---|---|---|
@@ -157,7 +157,7 @@
 
 TypeC×고지출 효과가 ①진짜 캠페인 효과인지, ②"이미 지출이 줄던 고지출 고객을 잡으려 캠페인을 몰아 보낸" 역방향 타겟팅의 결과인지 구분하기 위한 검정.
 
-![alt text](src/04_placebo_comparison.png)
+![alt text](/project-dunnhumby/src/04_placebo_comparison.png)
 
 **서술적 비교(33-42주 vs 92-101주 평균)**
 

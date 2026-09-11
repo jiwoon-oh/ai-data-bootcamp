@@ -23,7 +23,7 @@ N을 늘려가며 상관계수가 어떻게 변하는지 곡선으로 그려 elb
 **제약 조건**: 안정구간이 17 ~ 99주(총 83주)이므로, 초반구간이 전체의 10 ~ 15%(약 8~12주)를 넘지 않도록 상한을 둠.
 
 **결과**:
-![alt text](src/image.png)
+![alt text](/project-dunnhumby/src/image.png)
 - kneed 기준 elbow: N=10주
 - 해당 지점 상관계수: rho=0.697 (중간 정도 — 뚜렷한 elbow는 없었고, 어느 정도 노이즈가 있는 상태에서 X%를 정함)
 - 10~15% 규칙(8~12주) 통과 확인
@@ -38,8 +38,8 @@ N을 늘려가며 상관계수가 어떻게 변하는지 곡선으로 그려 elb
 완전 균등(y=x)이면 가설 자체가 성립하지 않고, 극단적으로 쏠려 있으면 곡선이 초반에 급격히 꺾인다.
 
 **결과**:
-![alt text](src/image-1.png)
-![alt text](src/image-2.png)
+![alt text](/project-dunnhumby/src/image-1.png)
+![alt text](/project-dunnhumby/src/image-2.png)
 - Gini 계수 = 0.532 (0=완전균등, 1=완전독점 — 꽤 집중된 편)
 - 관례적 파레토 법칙(20%→80%)과 달리, 이 데이터는 **상위 20%가 매출의 55.4%만 차지** (10%→36.1%, 30%→68.9%) → 파레토보다는 덜 극단적, 상위층이 더 쓰긴 하지만 중간층도 상당한 비중 차지
 - 최상위 1%가 전체 매출의 6.1% 차지, 다만 뚜렷하게 꺾이는 지점(elbow)은 없음 — 매끄럽게 감소하는 분포
@@ -72,7 +72,7 @@ H4-1이 주장하는 방향("상위 지출가구의 지출이 더 확대됐다")
 
 ### 6. 민감도 체크 (N=8, 10, 12주)
 
-![alt text](src/image-3.png)
+![alt text](/project-dunnhumby/src/image-3.png)
 
 | N(주) | 나머지 평균diff | 상위X% 평균diff |
 |---|---|---|
@@ -110,7 +110,7 @@ H4-1이 주장하는 방향("상위 지출가구의 지출이 더 확대됐다")
 - 공통언어효과크기 = 0.355 (완전 무작위면 0.5여야 함 — 나머지80%가 상위20%보다 더 늘어난 경우가 훨씬 흔함)
 - 95% CI (-227.7, -116.0), 0 미포함 → **그룹 간 차이 유의**
 
-![alt text](src/image-4.png)
+![alt text](/project-dunnhumby/src/image-4.png)
 
 세 검정 모두 유의, 방향도 일관(상위 감소·나머지 증가) → **H4-1(금액 관점) 기각**
 
@@ -119,7 +119,7 @@ H4-1이 주장하는 방향("상위 지출가구의 지출이 더 확대됐다")
 - 초반 비중 54.87% → 후반 비중 41.96% (**-12.91%p**)
 - 95% CI (-14.74%p, -11.09%p), 0 미포함 → **비중도 유의하게 감소**
 
-![alt text](src/image-5.png)
+![alt text](/project-dunnhumby/src/image-5.png)
 
 ---
 
@@ -180,7 +180,7 @@ H4-1로 매출 증가를 실제로 견인한 게 나머지80%임이 확인됨에
 | 기존 | 56.5% | **70.0%** | 51.78 |
 | 신규·재활성화 | 43.5% | **30.0%** | 10.26 |
 
-![alt text](src/image-6.png)
+![alt text](/project-dunnhumby/src/image-6.png)
 
 
 → **기여 비중(30%)이 인원 비중(43.5%)보다 오히려 작음** — 신규·재활성화 가구는 머릿수는 많지만,
@@ -203,7 +203,7 @@ H4-1로 매출 증가를 실제로 견인한 게 나머지80%임이 확인됨에
 
 **H4 전체 최종 요약**
 
-![alt text](src/image-7.png)
+![alt text](/project-dunnhumby/src/image-7.png)
 
 ### 14. H4 재검증 — 상위20% 위축 예측 모델 (5단계: 머신러닝)
 
@@ -260,7 +260,7 @@ H4-1(수렴 현상)·H4-2(신규·재활성화 연관, 단 인과 근거는 약�
 두 컬럼이 사실상 같은 정보(자녀 수 ↔ 가구원수)를 담고 있음이 확인되어 **KID_CATEGORY_DESC_encoded 제거**.
 제거 후 모든 feature의 VIF가 5 이하로 하락 (HOUSEHOLD_SIZE_DESC_encoded: 26.49 → 4.8) — 최종 feature 18개 확정.
 
-![alt text](src/image-8.png)
+![alt text](/project-dunnhumby/src/image-8.png)
 
 ---
 
@@ -277,8 +277,8 @@ H4-1(수렴 현상)·H4-2(신규·재활성화 연관, 단 인과 근거는 약�
 - 모델 PR-AUC = 0.674 — 기준선 대비 뚜렷한 개선, 다만 fold별 산점도에서 변동폭 있음 (표본 작음의 영향)
 - 혼동행렬: 실제 위축 223명 중 86명(약 39%)을 "유지"로 잘못 예측 — 아직 놓치는 비율 존재
 
-![alt text](src/image-9.png)
-![alt text](src/image-10.png)
+![alt text](/project-dunnhumby/src/image-9.png)
+![alt text](/project-dunnhumby/src/image-10.png)
 
 **오즈비 해석**
 1. **has_demo(인구통계 보유)** — 가장 강력한 보호 요인(OR≈0.35). 설문 참여 자체가 리텐션 시그널일 가능성
@@ -287,7 +287,7 @@ H4-1(수렴 현상)·H4-2(신규·재활성화 연관, 단 인과 근거는 약�
 4. **n_baskets(방문빈도)** — 위험 요인. 같은 지출액이면, 적게 자주 방문해 큰 장바구니로 채우는 가구보다 자주 방문하지만 소액 결제하는 가구가 상위권 유지에 더 취약할 가능성
 5. HOMEOWNER_DESC_Unknown, Probable Owner — 표본이 적어 추정치가 불안정할 수 있음, 참고 수준
 
-![alt text](src/image-11.png)
+![alt text](/project-dunnhumby/src/image-11.png)
 
 ---
 
@@ -295,18 +295,18 @@ H4-1(수렴 현상)·H4-2(신규·재활성화 연관, 단 인과 근거는 약�
 
 **성능**: recall이 로지스틱보다 뚜렷하게 낮음(실제 양성을 잘 못 잡아내고, 애매하면 유지 쪽으로 예측하는 보수적 경향). 표본 크기(499명)가 트리 모델엔 불리하게 작용한 것으로 추정 → **이 데이터·표본 크기에서는 로지스틱 회귀가 더 나은 선택**
 
-![alt text](src/image-12.png)
-![alt text](src/image-13.png)
+![alt text](/project-dunnhumby/src/image-12.png)
+![alt text](/project-dunnhumby/src/image-13.png)
 
 **SHAP 중요도 순위**: has_demo > sales_early > category_diversity > INCOME_DESC > avg_items_per_basket — 로지스틱 오즈비 순위와 거의 동일. **모델이 달라도 핵심 feature는 서로 교차검증됨**
 
-![alt text](src/image-14.png)
-![alt text](src/image-15.png)
+![alt text](/project-dunnhumby/src/image-14.png)
+![alt text](/project-dunnhumby/src/image-15.png)
 
 **비선형성 발견**: sales_early, category_diversity 둘 다 "일정 수준을 넘으면 추가 효과가 없다"는 포화(saturation) 구간 확인 — 로지스틱(선형 가정)은 못 잡는 부분. 마케팅 자원을 "이미 충분히 쓰는 고객"이 아니라 "경계선 근처 가구"에 집중해야 함을 시사
 
-![alt text](src/image-16.png)
-![alt text](src/image-17.png)
+![alt text](/project-dunnhumby/src/image-16.png)
+![alt text](/project-dunnhumby/src/image-17.png)
 
 ---
 
@@ -326,5 +326,5 @@ Permutation test, Dummy classifier 비교, Learning curve 세 가지로 확인�
 - 과적합 흔적 없음 (훈련-검증 성능 격차 거의 없음)
 - 다만 learning curve가 아직 완전히 평평해지지 않아, 현재 결과는 "표본에서 뽑아낼 수 있는 최댓값"이라기보다 **"표본이 더 확보되면 개선 여지가 있는 예비적 결과"**로 해석해야 함
 
-![alt text](src/image-18.png)
-![alt text](src/image-19.png)
+![alt text](/project-dunnhumby/src/image-18.png)
+![alt text](/project-dunnhumby/src/image-19.png)
